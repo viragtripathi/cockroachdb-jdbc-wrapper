@@ -6,29 +6,30 @@
 
 A lightweight, zero-maintenance Java library that wraps your existing PostgreSQL JDBC connection to automatically retry transient failures commonly encountered when using CockroachDB. These include:
 
-- **Serialization failures** (`40001`)
-- **Connection issues** (`08001`, `08003`, `08004`, `08006`, `08007`, `08S01`, `57P01`)
+- [**Serialization failures**](https://github.com/pgjdbc/pgjdbc/blob/master/pgjdbc/src/main/java/org/postgresql/util/PSQLState.java#L86) (`40001`)
+- [**Connection issues**](https://github.com/pgjdbc/pgjdbc/blob/master/pgjdbc/src/main/java/org/postgresql/util/PSQLState.java) (`08001`, `08003`, `08004`, `08006`, `08007`, `08S01`, `57P01`)
 
 ---
 
 ## 🎯 Purpose
 
-CockroachDB provides strong consistency and serializable isolation, which can lead to expected `40001` transaction retry errors. Instead of pushing that complexity to every application developer or service maintainer, this library provides a simple drop-in solution that:
+CockroachDB provides strong consistency and serializable isolation, which can lead to expected `40001` transaction retry errors. Instead of pushing that complexity to every application developer or service maintainer, this library provides a simple, non-intrusive solution that:
 
 - **Automatically retries** transactional errors internally
-- **Works transparently** with your existing `DataSource`, `Connection`, or `Statement`
-- **Requires no proxy**, reflection, or bytecode instrumentation
-- **Adds no runtime dependency except for Resilience4j (lightweight)**
+- **Works transparently** with your existing JDBC logic
+- **Adds no proxies**, reflection, bytecode hacks, or driver replacements
 - **Includes integration-tested retry logic** with CockroachDB
+- **Lets you opt-in** to optional wrapper types if needed
 
 ---
 
 ## 🧰 Features
 
-- `RetryableExecutor` with `execute()` and `executeVoid()` methods
-- `RetryableDataSource` and `RetryableConnection` wrappers
-- Built-in retry logic for SQLState errors known to be retryable
-- Simple, self-contained API
+- `RetryableExecutor` – simple utility to retry logic with `execute()` and `executeVoid()`
+- Optional `RetryableDataSource` and `RetryableConnection` for automatic retry of `commit()` and `rollback()`
+- Built-in handling of well-known CockroachDB/SQL state codes
+- Supports Resilience4j backoff and retry configuration
+- Zero-maintenance: no proxy servers, agents, or instrumentation
 
 ---
 
@@ -36,17 +37,15 @@ CockroachDB provides strong consistency and serializable isolation, which can le
 
 ### 1. Add Dependency
 
-If using the default JAR (lean):
-
 ```xml
 <dependency>
   <groupId>com.cockroachdb</groupId>
   <artifactId>cockroachdb-jdbc-wrapper</artifactId>
   <version>0.1.0</version>
 </dependency>
-```
+````
 
-Then manually include:
+If using the slim JAR, include dependencies manually:
 
 ```xml
 <dependency>
@@ -63,20 +62,40 @@ Then manually include:
 </dependency>
 ```
 
-### 💡 Download Options
+---
+
+## 💡 Download Options
 
 | File                                     | Description                                      |
 |------------------------------------------|--------------------------------------------------|
 | `cockroachdb-jdbc-wrapper-0.1.0.jar`     | Slim JAR (no deps, requires Resilience4j + JDBC) |
 | `cockroachdb-jdbc-wrapper-0.1.0-all.jar` | Uber JAR with Resilience4j shaded                |
 
-Add the shaded JAR to your classpath if you want plug-and-play functionality.
-
 ---
 
 ## ✅ Usage Examples
 
-### Wrap Your JDBC Setup
+### ✅ Recommended (Minimal) – Use `RetryableExecutor`
+
+```java
+RetryableExecutor executor = new RetryableExecutor();
+
+executor.executeVoid(() -> {
+    try (Connection conn = dataSource.getConnection()) {
+        conn.setAutoCommit(false);
+        // ... your DB ops
+        conn.commit();
+    }
+});
+```
+
+This keeps your code unchanged while centralizing retry logic.
+
+---
+
+### 🧩 Optional: Wrap Your `DataSource` or `Connection`
+
+If you want automatic retries for `commit()` / `rollback()` without calling the executor explicitly:
 
 ```java
 PGSimpleDataSource pgds = new PGSimpleDataSource();
@@ -84,26 +103,14 @@ pgds.setUrl("jdbc:postgresql://localhost:26257/defaultdb?sslmode=disable");
 pgds.setUser("root");
 
 DataSource retryable = new RetryableDataSource(pgds);
-Connection conn = retryable.getConnection();
+Connection conn = retryable.getConnection();  // wraps with retry logic for commit/rollback
 ```
 
-### Automatic Retry of Writes
+> ✅ These wrappers are safe, pure Java delegations — they don’t override driver behavior, proxy the JDBC layer, or touch internal state.
 
-```java
-RetryableExecutor executor = new RetryableExecutor();
+---
 
-executor.executeVoid(() -> {
-    try (PreparedStatement ps = conn.prepareStatement("INSERT INTO users (id, name) VALUES (?, ?)")) {
-        ps.setInt(1, 1);
-        ps.setString(2, "Alice");
-        ps.executeUpdate();
-    } catch (SQLException e) {
-        throw new RuntimeException(e);
-    }
-});
-```
-
-### Automatic Retry of Reads
+### 🔁 Retry of Reads
 
 ```java
 int userCount = executor.execute(() -> {
@@ -119,21 +126,7 @@ int userCount = executor.execute(() -> {
 
 ---
 
-## 🔁 Retry Behavior
-
-The following SQLState codes are retried internally:
-
-- `40001`: Serialization failure (CockroachDB retryable transaction error)
-- All `08xxx` codes: Connection-level errors
-- `57P01`: Admin shutdown
-
-Backoff and retry behavior is managed by **Resilience4j**, using 5 attempts with 500ms wait time by default.
-
----
-
 ## 🔧 Custom Retry Configuration
-
-You can override the defaults using `RetryConfig`:
 
 ```java
 RetryConfig config = RetryConfig.custom()
@@ -145,7 +138,7 @@ RetryConfig config = RetryConfig.custom()
 RetryableExecutor executor = new RetryableExecutor(config);
 ```
 
-### 🌀 Use Exponential Backoff
+### 🌀 Exponential Backoff
 
 ```java
 .intervalFunction(IntervalFunction.ofExponentialBackoff())
@@ -153,9 +146,19 @@ RetryableExecutor executor = new RetryableExecutor(config);
 
 ---
 
-## 🧪 Integration Testing with CockroachDB
+## 🔁 Retry Behavior
 
-Use Docker Compose to spin up a local cluster:
+Retries are automatically triggered for:
+
+* `40001`: Serialization failures
+* Any `08XXX`: Connection issues
+* `57P01`: Admin shutdown
+
+Backoff is managed via **Resilience4j** and is fully customizable.
+
+---
+
+## 🧪 Integration Testing with CockroachDB
 
 ```yaml
 version: '3.8'
@@ -168,12 +171,23 @@ services:
       - "8080:8080"
 ```
 
-Start it:
 ```bash
 docker-compose up -d
+./mvnw clean test
 ```
+---
 
-Then run:
-```bash
-mvn clean test
-```
+## 🧪 Sample Integration Demo
+
+Looking for a complete working example?
+
+👉 Check out the [cockroachdb-jdbc-wrapper-demo](https://github.com/viragtripathi/cockroachdb-jdbc-wrapper-demo) repository.
+
+It shows how to:
+
+- Connect to CockroachDB using the JDBC wrapper
+- Use `RetryableExecutor` for clean, retryable read/write logic
+- Simulate `40001` errors for live retry demos
+- Run everything locally using Docker and Maven
+
+Great for onboarding, testing, and CI!
