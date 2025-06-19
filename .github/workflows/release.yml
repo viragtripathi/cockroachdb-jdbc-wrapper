@@ -28,10 +28,8 @@ jobs:
         uses: jreleaser/release-action@v2
 
       - name: Run JReleaser
-        working-directory: ${{ github.workspace }}
+        uses: jreleaser/release-action@v2
+        with:
+          arguments: full-release
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ls -la .jreleaser
-          java -version
-          jreleaser full-release
