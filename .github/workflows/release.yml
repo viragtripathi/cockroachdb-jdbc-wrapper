@@ -1,0 +1,32 @@
+name: Release with JReleaser
+
+on:
+  push:
+    tags:
+      - '*'  # Trigger on any Git tag
+  workflow_dispatch:  # Allow manual release trigger
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    if: startsWith(github.ref, 'refs/tags/')
+    steps:
+      - name: Checkout Source
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v3
+        with:
+          java-version: 21
+          distribution: temurin
+
+      - name: Build Maven Project
+        run: ./mvnw clean package
+
+      - name: Set up JReleaser
+        uses: jreleaser/release-action@v2
+
+      - name: Run JReleaser
+        env:
+          JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: jreleaser full-release
