@@ -5,10 +5,11 @@ project:
   authors:
     - Virag Tripathi
   license: MIT
-  java:
-    groupId: com.cockroachdb
-    artifactId: cockroachdb-jdbc-wrapper
-    version: 0.1.0
+  languages:
+    java:
+      groupId: com.cockroachdb
+      artifactId: cockroachdb-jdbc-wrapper
+      version: 21
 
 release:
   github:
@@ -32,14 +33,9 @@ distributions:
         platform: slim
         extraProperties:
           classifier: slim
-          description: "slim, requires dependencies i.e. Resilience4j & PostgreSQL JAR's"
+          description: "Slim JAR. Requires Resilience4j and PostgreSQL driver on the classpath."
       - path: target/cockroachdb-jdbc-wrapper-{{projectVersion}}-all.jar
         platform: all
         extraProperties:
           classifier: uber
-          description: "Self-contained shaded JAR with Resilience4j included. Only needs PostgreSQL JAR at runtime."
-
-packagers:
-  github:
-    enabled: true
-
+          description: "Self-contained shaded JAR with Resilience4j included. Requires PostgreSQL driver at runtime."
