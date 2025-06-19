@@ -27,13 +27,8 @@ jobs:
       - name: Set up JReleaser
         uses: jreleaser/release-action@v2
 
-      - name: Run JReleaser
-        uses: jreleaser/release-action@v2
-        with:
-          arguments: full-release
-          distribution-type: CLI  # Required for jreleaser-cli.jar pathing
+      - name: Run JReleaser manually
+        run: |
+          curl -sL https://git.io/get-jreleaser | bash -s -- full-release --config-file=.jreleaser/config.yml
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          JRELEASER_DEBUG: true
-          JRELEASER_TRACE: true
-          JRELEASER_VERBOSE: true
