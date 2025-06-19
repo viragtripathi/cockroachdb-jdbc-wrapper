@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+
+<modelVersion>4.0.0</modelVersion>
+<groupId>com.cockroachdb</groupId>
+<artifactId>cockroachdb-jdbc-wrapper</artifactId>
+<version>0.1.0</version>
+<name>CockroachDB JDBC Wrapper</name>
+<description>Lightweight JDBC wrapper to handle CockroachDB retries</description>
+
+<properties>
+    <maven.compiler.source>21</maven.compiler.source>
+    <maven.compiler.target>21</maven.compiler.target>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <junit.version>5.10.2</junit.version>
+    <resilience4j.version>2.3.0</resilience4j.version>
+</properties>
+
+<dependencies>
+    <!-- PostgreSQL JDBC Driver -->
+    <dependency>
+        <groupId>org.postgresql</groupId>
+        <artifactId>postgresql</artifactId>
+        <version>42.7.7</version>
+        <scope>provided</scope>
+    </dependency>
+
+    <!-- Resilience4j for retrying -->
+    <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-retry</artifactId>
+        <version>${resilience4j.version}</version>
+    </dependency>
+    <dependency>
+        <groupId>io.github.resilience4j</groupId>
+        <artifactId>resilience4j-core</artifactId>
+        <version>${resilience4j.version}</version>
+    </dependency>
+
+    <!-- JUnit 5 -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+    </dependency>
+    <!-- JUnit Jupiter API -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-api</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+    </dependency>
+    <!-- JUnit Jupiter Engine -->
+    <dependency>
+        <groupId>org.junit.jupiter</groupId>
+        <artifactId>junit-jupiter-engine</artifactId>
+        <version>${junit.version}</version>
+        <scope>test</scope>
+    </dependency>
+</dependencies>
+
+<build>
+    <plugins>
+        <!-- Java Compiler Plugin -->
+        <plugin>
+            <artifactId>maven-compiler-plugin</artifactId>
+            <version>3.11.0</version>
+            <configuration>
+                <release>17</release>
+            </configuration>
+        </plugin>
+
+        <!-- Surefire Plugin for Test Execution -->
+        <plugin>
+            <artifactId>maven-surefire-plugin</artifactId>
+            <version>3.2.5</version>
+            <configuration>
+                <useModulePath>false</useModulePath>
+                <includes>
+                    <include>**/*Test.java</include>
+                </includes>
+            </configuration>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-shade-plugin</artifactId>
+            <version>3.5.0</version>
+            <executions>
+                <execution>
+                    <phase>package</phase>
+                    <goals>
+                        <goal>shade</goal>
+                    </goals>
+                    <configuration>
+                        <finalName>cockroachdb-jdbc-wrapper-0.1.0-all</finalName>
+                        <createDependencyReducedPom>false</createDependencyReducedPom>
+
+                        <artifactSet>
+                            <includes>
+                                <include>io.github.resilience4j:resilience4j-core</include>
+                                <include>io.github.resilience4j:resilience4j-retry</include>
+                            </includes>
+                        </artifactSet>
+
+                        <filters>
+                            <filter>
+                                <artifact>*:*</artifact>
+                                <excludes>
+                                    <exclude>META-INF/*.SF</exclude>
+                                    <exclude>META-INF/*.DSA</exclude>
+                                    <exclude>META-INF/*.RSA</exclude>
+                                </excludes>
+                            </filter>
+                        </filters>
+
+                        <relocations>
+                            <relocation>
+                                <pattern>io.github.resilience4j</pattern>
+                                <shadedPattern>shaded.io.github.resilience4j</shadedPattern>
+                            </relocation>
+                        </relocations>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
+</project>

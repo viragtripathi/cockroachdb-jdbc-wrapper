@@ -1,0 +1,36 @@
+project:
+  name: cockroachdb-jdbc-wrapper
+  version: 0.1.0
+  description: A lightweight JDBC wrapper with retries for CockroachDB
+  authors:
+    - Virag Tripathi
+  license: MIT
+  java:
+    groupId: com.cockroachdb
+    artifactId: cockroachdb-jdbc-wrapper
+    version: 0.1.0
+
+release:
+  github:
+    owner: viragtripathi
+    name: cockroachdb-jdbc-wrapper
+    tagName: v{{projectVersion}}
+    releaseName: CockroachDB JDBC Wrapper v{{projectVersion}}
+    overwrite: true
+    skipTag: false
+    changelog:
+      enabled: true
+      preset: conventional-commits
+
+distributions:
+  wrapper:
+    type: JAVA_BINARY
+    executable:
+      name: cockroachdb-jdbc-wrapper
+    artifacts:
+      - path: target/cockroachdb-jdbc-wrapper-{{projectVersion}}.jar
+
+packagers:
+  github:
+    enabled: true
+
