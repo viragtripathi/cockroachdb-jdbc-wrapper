@@ -3,14 +3,13 @@ name: Release with JReleaser
 on:
   push:
     tags:
-      - '*'  # Trigger on any Git tag
-  workflow_dispatch:  # Allow manual release trigger
+      - '*'  # Trigger on any tag
+  workflow_dispatch:
 
 jobs:
   release:
     runs-on: ubuntu-latest
     if: github.event_name == 'workflow_dispatch' || startsWith(github.ref, 'refs/tags/')
-
     steps:
       - name: Checkout Source
         uses: actions/checkout@v4
@@ -21,14 +20,16 @@ jobs:
           java-version: 21
           distribution: temurin
 
-      - name: Build Maven Project
+      - name: Build Project (skip tests)
         run: ./mvnw clean package -DskipTests
 
-      - name: Set up JReleaser
-        uses: jreleaser/release-action@v2
-
-      - name: Run JReleaser from remote config
+      - name: Install JReleaser CLI
         run: |
-          curl -sL https://git.io/get-jreleaser | bash -s -- full-release --config-file=https://raw.githubusercontent.com/viragtripathi/cockroachdb-jdbc-wrapper/main/.jreleaser/config.yml
+          curl -sL https://github.com/jreleaser/jreleaser/releases/download/v1.18.0/jreleaser-cli-1.18.0.zip -o jreleaser.zip
+          unzip jreleaser.zip -d jreleaser-cli
+          chmod +x jreleaser-cli/bin/jreleaser
+
+      - name: Run JReleaser with config
+        run: ./jreleaser-cli/bin/jreleaser full-release --config-file=.jreleaser/config.yml
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
