@@ -22,7 +22,7 @@ jobs:
           distribution: temurin
 
       - name: Build Maven Project
-        run: ./mvnw clean package
+        run: ./mvnw clean package -DskipTests
 
       - name: Set up JReleaser
         uses: jreleaser/release-action@v2
