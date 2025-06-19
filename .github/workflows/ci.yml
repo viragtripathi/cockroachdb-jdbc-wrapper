@@ -12,12 +12,6 @@ on:
 jobs:
   build-test:
     runs-on: ubuntu-latest
-    services:
-      cockroach:
-        image: cockroachdb/cockroach:latest
-        command: start-single-node --insecure
-        ports:
-          - 26257:26257
 
     steps:
       - uses: actions/checkout@v4
@@ -28,8 +22,15 @@ jobs:
           java-version: 21
           distribution: temurin
 
+      - name: Start CockroachDB container
+        run: |
+          docker run -d \
+            --name crdb \
+            -p 26257:26257 \
+            cockroachdb/cockroach:latest start-single-node --insecure
+
       - name: Build and Test
-        run: mvn clean verify
+        run: ./mvnw clean verify
 
   release:
     runs-on: ubuntu-latest
