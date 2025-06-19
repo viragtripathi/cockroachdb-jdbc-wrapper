@@ -27,8 +27,8 @@ jobs:
       - name: Set up JReleaser
         uses: jreleaser/release-action@v2
 
-      - name: Run JReleaser manually
+      - name: Run JReleaser from remote config
         run: |
-          curl -sL https://git.io/get-jreleaser | bash -s -- full-release --config-file=.jreleaser/config.yml
+          curl -sL https://git.io/get-jreleaser | bash -s -- full-release --config-file=https://raw.githubusercontent.com/viragtripathi/cockroachdb-jdbc-wrapper/main/.jreleaser/config.yml
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
