@@ -1,3 +1,7 @@
+[![Build](https://github.com/viragtripathi/cockroachdb-jdbc-wrapper/actions/workflows/ci.yml/badge.svg)](https://github.com/viragtripathi/cockroachdb-jdbc-wrapper/actions/workflows/ci.yml)
+[![GitHub release](https://img.shields.io/github/v/release/viragtripathi/cockroachdb-jdbc-wrapper)](https://github.com/viragtripathi/cockroachdb-jdbc-wrapper/releases)
+[![License](https://img.shields.io/github/license/viragtripathi/cockroachdb-jdbc-wrapper)](https://github.com/viragtripathi/cockroachdb-jdbc-wrapper/blob/main/LICENSE)
+
 # CockroachDB JDBC Wrapper
 
 A lightweight, zero-maintenance Java library that wraps your existing PostgreSQL JDBC connection to automatically retry transient failures commonly encountered when using CockroachDB. These include:
@@ -172,34 +176,4 @@ docker-compose up -d
 Then run:
 ```bash
 mvn clean test
-```
-
----
-
-## 🧼 Zero Maintenance Philosophy
-
-This library:
-
-- Requires no config or boilerplate
-- Uses no static hooks or agent hacks
-- Can be upgraded as a single, versioned `.jar`
-- Is tested with CockroachDB under containerized conditions
-
-You just:
-```java
-new RetryableConnection(...) // and forget about retry plumbing
-```
-
----
-
-## 📦 Build and Release
-
-```bash
-mvn clean package          # slim JAR
-mvn clean package -Puber   # builds cockroachdb-jdbc-wrapper-0.1.0-all.jar
-```
-
-Or tag + release via JReleaser CI:
-```bash
-git tag v0.1.0 && git push origin v0.1.0
 ```
