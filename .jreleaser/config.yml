@@ -29,6 +29,15 @@ distributions:
       name: cockroachdb-jdbc-wrapper
     artifacts:
       - path: target/cockroachdb-jdbc-wrapper-{{projectVersion}}.jar
+        platform: slim
+        extraProperties:
+          classifier: slim
+          description: "slim, requires dependencies i.e. Resilience4j & PostgreSQL JAR's"
+      - path: target/cockroachdb-jdbc-wrapper-{{projectVersion}}-all.jar
+        platform: all
+        extraProperties:
+          classifier: uber
+          description: "Self-contained shaded JAR with Resilience4j included. Only needs PostgreSQL JAR at runtime."
 
 packagers:
   github:
