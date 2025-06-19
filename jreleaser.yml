@@ -28,7 +28,7 @@ release:
       preset: conventional-commits
 
 distributions:
-  wrapper:
+  wrapper-slim:
     type: JAVA_BINARY
     executable:
       name: cockroachdb-jdbc-wrapper
@@ -37,6 +37,12 @@ distributions:
         extraProperties:
           classifier: slim
           description: "Slim JAR. Requires Resilience4j and PostgreSQL driver on the classpath."
+
+  wrapper-uber:
+    type: JAVA_BINARY
+    executable:
+      name: cockroachdb-jdbc-wrapper
+    artifacts:
       - path: target/cockroachdb-jdbc-wrapper-{{projectVersion}}-all.jar
         extraProperties:
           classifier: uber
