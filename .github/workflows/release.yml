@@ -23,13 +23,7 @@ jobs:
       - name: Build Project (skip tests)
         run: ./mvnw clean package -DskipTests
 
-      - name: Install JReleaser CLI
-        run: |
-          curl -sL https://github.com/jreleaser/jreleaser/releases/download/v1.18.0/jreleaser-cli-1.18.0.zip -o jreleaser.zip
-          unzip jreleaser.zip -d jreleaser-cli
-          chmod +x jreleaser-cli/bin/jreleaser
-
-      - name: Run JReleaser with config
-        run: ./jreleaser-cli/bin/jreleaser full-release --config-file=.jreleaser/config.yml
+      - name: Run JReleaser
+        uses: jreleaser/release-action@v2
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
