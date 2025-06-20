@@ -191,3 +191,29 @@ It shows how to:
 - Run everything locally using Docker and Maven
 
 Great for onboarding, testing, and CI!
+
+---
+
+## 🛠️ Build
+
+This project includes the Maven Wrapper (`mvnw`) so you don't need to install Maven separately.
+
+### 🔨 Build the Project
+
+```bash
+./mvnw clean package
+```
+
+This produces:
+- `target/cockroachdb-jdbc-wrapper-0.1.0.jar` — Slim JAR
+- `target/cockroachdb-jdbc-wrapper-0.1.0-all.jar` — Uber JAR with Resilience4j included
+
+
+## 🔧 Prerequisites
+
+- Java **21+** (JDK) to build the project
+- Java **17 or higher** to run the JARs
+- Maven 3.9+ (optional — `./mvnw` is included)
+- Docker (for optional demo environment)
+
+> Note: While the JAR is compatible with Java 17+, building from source requires JDK 21 due to Maven compiler target settings.
