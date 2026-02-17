@@ -6,7 +6,7 @@
 <modelVersion>4.0.0</modelVersion>
 <groupId>com.cockroachdb</groupId>
 <artifactId>cockroachdb-jdbc-wrapper</artifactId>
-<version>0.1.0</version>
+<version>0.2.0</version>
 <name>CockroachDB JDBC Wrapper</name>
 <description>Lightweight JDBC wrapper to handle CockroachDB retries</description>
 
@@ -95,7 +95,7 @@
                         <goal>shade</goal>
                     </goals>
                     <configuration>
-                        <finalName>cockroachdb-jdbc-wrapper-0.1.0-all</finalName>
+                        <finalName>cockroachdb-jdbc-wrapper-0.2.0-all</finalName>
                         <createDependencyReducedPom>false</createDependencyReducedPom>
 
                         <artifactSet>
