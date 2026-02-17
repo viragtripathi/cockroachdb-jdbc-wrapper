@@ -1,5 +1,6 @@
 package com.cockroachdb.jdbc;
 
+import io.github.resilience4j.core.IntervalFunction;
 import io.github.resilience4j.retry.*;
 import org.postgresql.util.PSQLState;
 
@@ -29,11 +30,12 @@ public class RetryableExecutor {
         this.retry = Retry.of("crdbRetry", config);
     }
 
-    // Build default RetryConfig (5 attempts, 500ms backoff)
+    // Build default RetryConfig (5 attempts, exponential backoff with jitter starting at 200ms)
     public static RetryConfig buildDefaultRetryConfig() {
         return RetryConfig.custom()
                 .maxAttempts(5)
-                .waitDuration(Duration.ofMillis(500))
+                .waitDuration(Duration.ofMillis(200))
+                .intervalFunction(IntervalFunction.ofExponentialRandomBackoff(200, 2.0, 0.5))
                 .retryOnException(RetryableExecutor::isRetryable)
                 .build();
     }
@@ -44,8 +46,9 @@ public class RetryableExecutor {
                 ? t.getCause()
                 : t;
 
-        if (!(cause instanceof SQLException)) return false;
-        String state = ((SQLException) cause).getSQLState();
+        if (!(cause instanceof SQLException sqlEx)) return false;
+        String state = sqlEx.getSQLState();
+        if (state == null) return false;
         return PSQLState.SERIALIZATION_FAILURE.getState().equals(state)
                 || state.startsWith("08")
                 || "57P01".equals(state);
